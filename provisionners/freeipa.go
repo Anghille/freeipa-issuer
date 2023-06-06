@@ -11,7 +11,7 @@ import (
 	api "github.com/anghille/freeipa-issuer/api/v1"
 	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
 	"github.com/jetstack/cert-manager/pkg/util/pki"
-	"github.com/anghille/freeipa-go-client/freeipa" 
+	"github.com/anghille/freeipa-client/freeipa" 
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
