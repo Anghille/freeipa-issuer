@@ -35,14 +35,11 @@ import (
 type ClusterIssuerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	Debug bool
 }
 
 func (r *ClusterIssuerReconciler) Reconcile(ctx context.Context, req reconcile.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("clusterissuer", req.NamespacedName)
 	
-	r.Debug = clusterIssuer.Spec.Debug
-
 	iss := new(api.ClusterIssuer)
 	if err := r.Client.Get(ctx, req.NamespacedName, iss); err != nil {
 		log.Error(err, "failed to retrieve ClusterIssuer resource")
