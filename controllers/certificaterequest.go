@@ -6,9 +6,9 @@ import (
 
 	api "github.com/anghille/freeipa-issuer/api/v1"
 	provisioners "github.com/anghille/freeipa-issuer/provisionners"
-	cmutil "github.com/jetstack/cert-manager/pkg/api/util"
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
+	cmutil "github.com/cert-manager/cert-manager/pkg/api/util"
+	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
