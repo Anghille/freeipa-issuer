@@ -27,7 +27,7 @@ spec:
         - /manager
         args:
         - --enable-leader-election
-        image: 10.0.0.2:5000/local/controller:latest
+        image: docker.io/thisissoawesome/controller:latest
         name: manager
         resources:
           limits:
