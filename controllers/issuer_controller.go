@@ -35,14 +35,11 @@ import (
 type IssuerReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	Debug bool
 }
 
 func (r *IssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (reconcile.Result, error) {
 	log := log.FromContext(ctx).WithValues("issuer", req.NamespacedName)
-	
-	r.Debug = issuer.Spec.Debug
-	
+		
 	iss := new(api.Issuer)
 	if err := r.Client.Get(ctx, req.NamespacedName, iss); err != nil {
 		log.Error(err, "failed to retrieve Issuer resource")
