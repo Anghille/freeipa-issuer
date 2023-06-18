@@ -4,14 +4,18 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
+	"time"
+
+	//"strconv"
 	"sync"
 
+	"github.com/anghille/freeipa-client/freeipa"
 	api "github.com/anghille/freeipa-issuer/api/v1"
-	certmanager "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	"github.com/jetstack/cert-manager/pkg/util/pki"
-	"github.com/anghille/freeipa-client/freeipa" 
+	certmanager "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	"github.com/cert-manager/cert-manager/pkg/util/pki"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -26,19 +30,16 @@ type FreeIPAPKI struct {
 	name string
 }
 
-// ExtractAndUpperCaseDomain extracts and capitalizes the domain part from the given FQDN
-func ExtractAndUpperCaseDomain(commonName string) string {
-	// Split the given FQDN into parts
-	parts := strings.Split(commonName, ".")
-	if len(parts) > 1 {
-			// Capitalize the domain part
-			domainParts := parts[1:]
-			domain := strings.Join(domainParts, ".")
-			return strings.ToUpper(domain)
-	} else {
-			// Handle the case when there is no domain in the common name
-			return ""
+func formatCertificate(cert string) string {
+	header := "-----BEGIN CERTIFICATE-----"
+	footer := "-----END CERTIFICATE-----"
+	if !strings.HasPrefix(cert, header) {
+		cert = strings.Join([]string{header, cert}, "\n")
 	}
+	if !strings.HasSuffix(cert, footer) {
+		cert = strings.Join([]string{cert, footer}, "\n")
+	}
+	return cert
 }
 
 // New returns a new provisioner, configured with the information in the
@@ -88,7 +89,6 @@ const certKey = "certificate"
 // certificate.
 func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateRequest) (CertPem, CaPem, error) {
 	log := log.FromContext(ctx).WithName("sign").WithValues("request", cr)
-	
 
 	csr, err := pki.DecodeX509CertificateRequestBytes(cr.Spec.Request)
 	if err != nil {
@@ -116,9 +116,7 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 		}
 	}
 
-	realm := ExtractAndUpperCaseDomain(csr.Subject.CommonName)
 	name := fmt.Sprintf("%s/%s", s.spec.ServiceName, csr.Subject.CommonName)
-	fmt.Printf("INFO - [%s] Constructed name for ServiceFind() - serviceName: %s, commonName: %s, name: %s\n", time.Now().Format(time.RFC3339), s.spec.ServiceName, csr.Subject.CommonName, name)
 
 	// Adding service
 	if s.spec.AddService {
@@ -135,13 +133,12 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 				return nil, nil, fmt.Errorf("fail listing services: %v", err)
 			}
 		} else if svcList.Count == 0 {
-			fmt.Printf("INFO - [%s] Adding service - serviceName: %s, commonName: %s, name: %s\n", time.Now().Format(time.RFC3339), s.spec.ServiceName, csr.Subject.CommonName, name)
 			if _, err := s.client.ServiceAdd(&freeipa.ServiceAddArgs{Krbcanonicalname: name}, &freeipa.ServiceAddOptionalArgs{Force: freeipa.Bool(true)}); err != nil && !s.spec.IgnoreError {
 				return nil, nil, fmt.Errorf("fail adding service: %v", err)
 			}
 		}
 	}
-	fmt.Printf("INFO - [%s] Requesting certificate - Csr: %s, Principal: %s, Cacn: %s, Add: %s\n", time.Now().Format(time.RFC3339), string(cr.Spec.Request), name, &s.spec.Ca, &s.spec.AddPrincipal)
+
 	result, err := s.client.CertRequest(&freeipa.CertRequestArgs{
 		Csr:       string(cr.Spec.Request),
 		Principal: name,
@@ -153,15 +150,29 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 		return nil, nil, fmt.Errorf("Fail to request certificate: %v", err)
 	}
 
-	reqCertShow := &freeipa.CertShowArgs{
-		SerialNumber: int(result.Result.(map[string]interface{})["serial_number"].(float64)),
+	serialNumberStr, ok := result.Result.(map[string]interface{})["serial_number"].(string)
+	if !ok {
+		return nil, nil, fmt.Errorf("Fail to convert serial_number to string: %v", ok)
 	}
-	fmt.Printf("INFO - [%s] Cert SerialNumber: %s\n", time.Now().Format(time.RFC3339), int(result.Result.(map[string]interface{})["serial_number"].(float64)))
+
+	reqCertShow := &freeipa.CertShowArgs{
+		SerialNumber: serialNumberStr,
+	}
 
 	var certPem string
 	var caPem string
+	var cert *freeipa.CertShowResponse
 
-	cert, err := s.client.CertShow(reqCertShow, &freeipa.CertShowOptionalArgs{Chain: freeipa.Bool(true)})
+	//This code will retry the CertShow operation up to 5 times, with delays of 2^i seconds between each try.
+	// After 5 failed attempts, it will give up and handle the error as before.
+	for i := 0; i < 3; i++ {
+		cert, err := s.client.CertShow(reqCertShow, &freeipa.CertShowOptionalArgs{Chain: freeipa.Bool(true)})
+		if err == nil && len(*cert.Result.CertificateChain) > 0 {
+			break
+		}
+		time.Sleep(time.Duration(math.Pow(2, float64(i))) * time.Second)
+	}
+
 	if err != nil || len(*cert.Result.CertificateChain) == 0 {
 		log.Error(err, "fail to get certificate FALLBACK", "requestResult", result)
 
@@ -183,16 +194,4 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 	}
 
 	return []byte(strings.TrimSpace(certPem)), []byte(strings.TrimSpace(caPem)), nil
-}
-
-func formatCertificate(cert string) string {
-	header := "-----BEGIN CERTIFICATE-----"
-	footer := "-----END CERTIFICATE-----"
-	if !strings.HasPrefix(cert, header) {
-		cert = strings.Join([]string{header, cert}, "\n")
-	}
-	if !strings.HasSuffix(cert, footer) {
-		cert = strings.Join([]string{cert, footer}, "\n")
-	}
-	return cert
 }
