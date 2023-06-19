@@ -4,10 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"math"
 	"net/http"
 	"strings"
-	"time"
 
 	//"strconv"
 	"sync"
@@ -162,17 +160,10 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 	var certPem string
 	var caPem string
 
-	cert, err := s.client.CertShow(reqCertShow, &freeipa.CertShowOptionalArgs{Chain: freeipa.Bool(true)})
-	//This code will retry the CertShow operation up to 5 times, with delays of 2^i seconds between each try.
-	// After 5 failed attempts, it will give up and handle the error as before.
-	for i := 0; i < 3; i++ {
-		cert, err := s.client.CertShow(reqCertShow, &freeipa.CertShowOptionalArgs{Chain: freeipa.Bool(true)})
-		if err == nil && len(*cert.Result.CertificateChain) > 0 {
-			break
-		}
-		time.Sleep(time.Duration(math.Pow(2, float64(i))) * time.Second)
-	}
-
+	cert, err := s.client.CertShow(reqCertShow,
+		&freeipa.CertShowOptionalArgs{
+			Cacn:  &s.spec.Ca,
+			Chain: freeipa.Bool(true)})
 	if err != nil || len(*cert.Result.CertificateChain) == 0 {
 		log.Error(err, "fail to get certificate FALLBACK", "requestResult", result)
 

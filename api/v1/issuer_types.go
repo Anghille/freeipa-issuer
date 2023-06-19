@@ -17,8 +17,8 @@ limitations under the License.
 package v1
 
 import (
-        corev1 "k8s.io/api/core/v1"
-        metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -26,56 +26,54 @@ import (
 
 // IssuerSpec defines the desired state of Issuer
 type IssuerSpec struct {
-        // INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-        // Important: Run "make" to regenerate code after modifying this file
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
 
-        // Host remote FreeIPA server
-        Host     string             `json:"host"`
-        User     *SecretKeySelector `json:"user"`
-        Password *SecretKeySelector `json:"password"`
+	// Host remote FreeIPA server
+	Host     string             `json:"host"`
+	User     *SecretKeySelector `json:"user"`
+	Password *SecretKeySelector `json:"password"`
 
-        ServiceName string `json:"serviceName"`
-        AddHost bool `json:"addHost"`
-        AddService bool `json:"addService"`
-        AddPrincipal bool `json:"addPrincipal"`
-        Ca string `json:"ca"`
-        Insecure bool `json:"insecure"`
-        IgnoreError bool `json:"ignoreError"`
+	ServiceName  string `json:"serviceName"`
+	AddHost      bool   `json:"addHost"`
+	AddService   bool   `json:"addService"`
+	AddPrincipal bool   `json:"addPrincipal"`
+	Ca           string `json:"ca"`
+	Insecure     bool   `json:"insecure"`
+	IgnoreError  bool   `json:"ignoreError"`
 }
 
 // IssuerStatus defines the observed state of Issuer
 type IssuerStatus struct {
-        // INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-        // Important: Run "make" to regenerate code after modifying this file
+	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
 
-        // +optional
-        Conditions []IssuerCondition `json:"conditions,omitempty"`
+	// +optional
+	Conditions []IssuerCondition `json:"conditions,omitempty"`
 }
-
 
 // Issuer is the Schema for the issuers API
 type Issuer struct {
-        metav1.TypeMeta   `json:",inline"`
-        metav1.ObjectMeta `json:"metadata,omitempty"`
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-        Spec   IssuerSpec   `json:"spec,omitempty"`
-        Status IssuerStatus `json:"status,omitempty"`
+	Spec   IssuerSpec   `json:"spec,omitempty"`
+	Status IssuerStatus `json:"status,omitempty"`
 }
-
 
 // IssuerList contains a list of Issuer
 type IssuerList struct {
-        metav1.TypeMeta `json:",inline"`
-        metav1.ListMeta `json:"metadata,omitempty"`
-        Items           []Issuer `json:"items"`
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Issuer `json:"items"`
 }
 
 // ConditionType represents a Issuer condition type.
 type ConditionType string
 
 const (
-        // ConditionReady indicates that a Issuer is ready for use.
-        ConditionReady ConditionType = "Ready"
+	// ConditionReady indicates that a Issuer is ready for use.
+	ConditionReady ConditionType = "Ready"
 )
 
 // ConditionStatus represents a condition's status.
@@ -87,49 +85,49 @@ type ConditionStatus string
 // condition or not. In the future, we could add other intermediate
 // conditions, e.g. ConditionDegraded.
 const (
-        // ConditionTrue represents the fact that a given condition is true
-        ConditionTrue ConditionStatus = "True"
+	// ConditionTrue represents the fact that a given condition is true
+	ConditionTrue ConditionStatus = "True"
 
-        // ConditionFalse represents the fact that a given condition is false
-        ConditionFalse ConditionStatus = "False"
+	// ConditionFalse represents the fact that a given condition is false
+	ConditionFalse ConditionStatus = "False"
 
-        // ConditionUnknown represents the fact that a given condition is unknown
-        ConditionUnknown ConditionStatus = "Unknown"
+	// ConditionUnknown represents the fact that a given condition is unknown
+	ConditionUnknown ConditionStatus = "Unknown"
 )
 
 // IssuerCondition contains condition information for the issuer.
 type IssuerCondition struct {
-        // Type of the condition, currently ('Ready').
-        Type ConditionType `json:"type"`
+	// Type of the condition, currently ('Ready').
+	Type ConditionType `json:"type"`
 
-        // Status of the condition, one of ('True', 'False', 'Unknown').
-        // +kubebuilder:validation:Enum=True;False;Unknown
-        Status ConditionStatus `json:"status"`
+	// Status of the condition, one of ('True', 'False', 'Unknown').
+	// +kubebuilder:validation:Enum=True;False;Unknown
+	Status ConditionStatus `json:"status"`
 
-        // LastTransitionTime is the timestamp corresponding to the last status
-        // change of this condition.
-        // +optional
-        LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
+	// LastTransitionTime is the timestamp corresponding to the last status
+	// change of this condition.
+	// +optional
+	LastTransitionTime *metav1.Time `json:"lastTransitionTime,omitempty"`
 
-        // Reason is a brief machine readable explanation for the condition's last
-        // transition.
-        // +optional
-        Reason string `json:"reason,omitempty"`
+	// Reason is a brief machine readable explanation for the condition's last
+	// transition.
+	// +optional
+	Reason string `json:"reason,omitempty"`
 
-        // Message is a human readable description of the details of the last
-        // transition, complementing reason.
-        // +optional
-        Message string `json:"message,omitempty"`
+	// Message is a human readable description of the details of the last
+	// transition, complementing reason.
+	// +optional
+	Message string `json:"message,omitempty"`
 }
 
 // SecretKeySelector selects a key of a Secret.
 type SecretKeySelector struct {
-        // The name and namespace of the secret to select from.
-        corev1.SecretReference `json:",inline" protobuf:"bytes,1,opt,name=secretReference"`
-        // The key of the secret to select from.  Must be a valid secret key.
-        Key string `json:"key" protobuf:"bytes,2,opt,name=key"`
+	// The name and namespace of the secret to select from.
+	corev1.SecretReference `json:",inline" protobuf:"bytes,1,opt,name=secretReference"`
+	// The key of the secret to select from.  Must be a valid secret key.
+	Key string `json:"key" protobuf:"bytes,2,opt,name=key"`
 }
 
 func init() {
-        SchemeBuilder.Register(&Issuer{}, &IssuerList{})
+	SchemeBuilder.Register(&Issuer{}, &IssuerList{})
 }
