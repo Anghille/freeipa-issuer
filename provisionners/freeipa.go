@@ -137,7 +137,7 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 		}
 	}
 
-	result, err := s.client.CertRequest(&freeipa.CertRequestArgs{
+	certRequestResult, err := s.client.CertRequest(&freeipa.CertRequestArgs{
 		Csr:       string(cr.Spec.Request),
 		Principal: name,
 	}, &freeipa.CertRequestOptionalArgs{
@@ -148,7 +148,7 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 		return nil, nil, fmt.Errorf("Fail to request certificate: %v", err)
 	}
 
-	serialNumberStr, ok := result.Result.(map[string]interface{})["serial_number"].(string)
+	serialNumberStr, ok := certRequestResult.Result.(map[string]interface{})["serial_number"].(string)
 	if !ok {
 		return nil, nil, fmt.Errorf("Fail to convert serial_number to string: %v", ok)
 	}
@@ -163,13 +163,15 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 	cert, err := s.client.CertShow(reqCertShow,
 		&freeipa.CertShowOptionalArgs{
 			Cacn:  &s.spec.Ca,
+			All:   freeipa.Bool(true),
 			Chain: freeipa.Bool(true)})
-	if err != nil || len(*cert.Result.CertificateChain) == 0 {
-		log.Error(err, "fail to get certificate FALLBACK", "requestResult", result)
 
-		c, ok := result.Result.(map[string]interface{})[certKey].(string)
+	if err != nil || len(*cert.Result.CertificateChain) == 0 {
+		log.Error(err, "fail to get certificate FALLBACK", "requestResult", certRequestResult)
+
+		c, ok := certRequestResult.Result.(map[string]interface{})[certKey].(string)
 		if !ok || c == "" {
-			return nil, nil, fmt.Errorf("can't find certificate for: %s", result.String())
+			return nil, nil, fmt.Errorf("can't find certificate for: %s", certRequestResult.String())
 		}
 
 		certPem = formatCertificate(c)
