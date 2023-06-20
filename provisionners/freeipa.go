@@ -162,9 +162,8 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 
 	cert, err := s.client.CertShow(reqCertShow,
 		&freeipa.CertShowOptionalArgs{
-			Cacn:  &s.spec.Ca,
-			All:   freeipa.Bool(true),
-			Chain: freeipa.Bool(true)})
+			Cacn: &s.spec.Ca,
+			All:  freeipa.Bool(true)})
 
 	if err != nil || len(*cert.Result.CertificateChain) == 0 {
 		log.Error(err, "fail to get certificate FALLBACK", "requestResult", certRequestResult)
@@ -173,10 +172,12 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 		if !ok || c == "" {
 			return nil, nil, fmt.Errorf("can't find certificate for: %s", certRequestResult.String())
 		}
-
 		certPem = formatCertificate(c)
 	} else {
 		for i, c := range *cert.Result.CertificateChain {
+			if len(strings.Replace(c, "\n", "", -1)) == 0 {
+				continue
+			}
 			c = formatCertificate(c)
 			if i == 0 {
 				certPem = c
