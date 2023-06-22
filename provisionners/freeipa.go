@@ -163,8 +163,6 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 			&freeipa.ServiceAddPrincipalArgs{Krbcanonicalname: name, Krbprincipalname: csr.DNSNames},
 			&freeipa.ServiceAddPrincipalOptionalArgs{}); err != nil && !s.spec.IgnoreError {
 			return nil, nil, fmt.Errorf("fail adding DNSNames SAN principal to the service %v : %v", name, err)
-		} else if err != nil && s.spec.IgnoreError {
-			log.Error(err, "Ignored Error> Failed to add DNSNames SAN principal to the service")
 		} else {
 			log.Info("Added DNSNames SAN principal to the service", "service", name)
 		}
