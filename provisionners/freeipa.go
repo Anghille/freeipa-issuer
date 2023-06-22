@@ -155,7 +155,7 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 	// Create alias principal for the service if DNSNames is specified
 	if csr.DNSNames != nil && len(csr.DNSNames) > 0 {
 		if _, err := s.client.ServiceAddPrincipal(
-			&freeipa.ServiceAddPrincipalArgs{Krbprincipalname: csr.DNSNames},
+			&freeipa.ServiceAddPrincipalArgs{Krbcanonicalname: name, Krbprincipalname: csr.DNSNames},
 			&freeipa.ServiceAddPrincipalOptionalArgs{}); err != nil && !s.spec.IgnoreError {
 			return nil, nil, fmt.Errorf("fail adding DNSNames SAN principal to the service %v : %v", name, err)
 		} else if err != nil && s.spec.IgnoreError {
