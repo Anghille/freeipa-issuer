@@ -200,9 +200,8 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 	// Fetch the certificate from the FreeIPA server.
 	cert, err := s.client.CertShow(reqCertShow,
 		&freeipa.CertShowOptionalArgs{
-			Cacn:  &s.spec.Ca,          // Use the specific CA from the spec.
-			All:   freeipa.Bool(true),  // Retrieve all attributes.
-			Chain: freeipa.Bool(true)}) // Include certificate chain.
+			Cacn: &s.spec.Ca,
+			All:  freeipa.Bool(true)})
 
 	// If there's an error or the certificate chain is empty, fallback to the certificate in the request result.
 	if err != nil || len(*cert.Result.CertificateChain) == 0 {
@@ -212,10 +211,12 @@ func (s *FreeIPAPKI) Sign(ctx context.Context, cr *certmanager.CertificateReques
 		if !ok || c == "" {
 			return nil, nil, fmt.Errorf("can't find certificate for: %s", certRequestResult.String())
 		}
-
 		certPem = formatCertificate(c)
 	} else {
 		for i, c := range *cert.Result.CertificateChain {
+			if len(strings.Replace(c, "\n", "", -1)) == 0 {
+				continue
+			}
 			c = formatCertificate(c)
 			if i == 0 {
 				certPem = c
