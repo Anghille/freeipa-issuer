@@ -61,7 +61,7 @@ func (r *IssuerReconciler) Reconcile(ctx context.Context, req ctrl.Request) (rec
 	}
 
 	// Initialize and store the provisioner
-	p, err := provisioners.New(req.NamespacedName, &iss.Spec, string(user), string(password), iss.Spec.Insecure)
+	p, err := provisioners.New(ctx, req.NamespacedName, &iss.Spec, string(user), string(password), iss.Spec.Insecure)
 	if err != nil {
 		log.Error(err, "failed to create provisioner")
 		_ = r.setStatus(ctx, iss, api.ConditionFalse, "Error", "Failed initialize provisioner")
