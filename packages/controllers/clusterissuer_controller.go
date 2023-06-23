@@ -39,7 +39,7 @@ type ClusterIssuerReconciler struct {
 
 func (r *ClusterIssuerReconciler) Reconcile(ctx context.Context, req reconcile.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("clusterissuer", req.NamespacedName)
-	
+
 	iss := new(api.ClusterIssuer)
 	if err := r.Client.Get(ctx, req.NamespacedName, iss); err != nil {
 		log.Error(err, "failed to retrieve ClusterIssuer resource")

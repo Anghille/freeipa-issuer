@@ -44,17 +44,33 @@ func formatCertificate(cert string) string {
 
 // New returns a new provisioner configured with the information in the given issuer.
 // It establishes a connection to the FreeIPA server and initializes the FreeIPAPKI structure.
-func New(namespacedName types.NamespacedName, spec *api.IssuerSpec, user, password string, insecure bool) (*FreeIPAPKI, error) {
+func New(ctx context.Context, namespacedName types.NamespacedName, spec *api.IssuerSpec, user, password string, insecure bool) (*FreeIPAPKI, error) {
 	// Configure the HTTP transport, specifically allowing for insecure TLS connections if required
+	log := log.FromContext(ctx).WithName("sign").WithValues("specs", spec)
+
 	tspt := http.Transport{
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: insecure,
 		},
 	}
 
-	// Connect to FreeIPA server using the provided host, user credentials and transport settings
-	client, err := freeipa.Connect(spec.Host, &tspt, user, password)
+	var client *freeipa.Client
+	var err error
+
+	// Loop over all hosts and try to connect to each one
+	for _, host := range spec.Hosts {
+		// Connect to FreeIPA server using the provided host, user credentials and transport settings
+		client, err = freeipa.Connect(host, &tspt, user, password)
+		if err == nil {
+			// Connection successful, break the loop
+			log.Info("Successfully connected to host: ", "host", host) // Logging the successful host connection
+			break
+		}
+	}
+
+	// If there was an error connecting to all hosts, return the error
 	if err != nil {
+		log.Error(err, "Failed to connect to any host")
 		return nil, err
 	}
 

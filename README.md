@@ -12,6 +12,47 @@ A [cert-manager](https://cert-manager.io) external issuer to be used with [FreeI
 - [kustomize](https://github.com/kubernetes-sigs/kustomize)
 - optional: Kubernetes worker nodes adopted into FreeIPA domain (for use with self signed certificate)
 
+## Installation
+
+### From source
+
+1. Get the source code
+
+```bash
+git clone https://github.com/anghille/freeipa-issuer.git
+cd freeipa-issuer
+``` 
+
+2. (Optionnal) Change namespace in `deploy/kustomization.yaml` if necessary. Default to freeipa-issuer-system
+3. Apply `kustomization` configuration
+
+```bash
+kubectl apply -k deploy/
+```
+
+### From `Kustomize` file
+
+1. Create a `kustomize.yaml` file
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1
+kind: Kustomization
+metadata:
+  name: freeipa-issuer
+
+commonLabels:
+  app: freeipa-issuer
+
+resources:
+  - https://github.com/anghille/freeipa-issuer/deploy/
+```
+
+2. Apply this file to Kubernetes
+
+```bash
+kubectl apply -k kustomize.yaml
+```
+
 # Informations
 
 ## Dive in the code of freeipa client
