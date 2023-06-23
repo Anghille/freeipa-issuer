@@ -39,7 +39,7 @@ type ClusterIssuerReconciler struct {
 
 func (r *ClusterIssuerReconciler) Reconcile(ctx context.Context, req reconcile.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx).WithValues("clusterissuer", req.NamespacedName)
-	
+
 	iss := new(api.ClusterIssuer)
 	if err := r.Client.Get(ctx, req.NamespacedName, iss); err != nil {
 		log.Error(err, "failed to retrieve ClusterIssuer resource")
@@ -61,7 +61,7 @@ func (r *ClusterIssuerReconciler) Reconcile(ctx context.Context, req reconcile.R
 	}
 
 	// Initialize and store the provisioner
-	p, err := provisioners.New(req.NamespacedName, &iss.Spec, string(user), string(password), iss.Spec.Insecure)
+	p, err := provisioners.New(ctx, req.NamespacedName, &iss.Spec, string(user), string(password), iss.Spec.Insecure)
 	if err != nil {
 		log.Error(err, "failed to create provisioner")
 		_ = r.setStatus(ctx, iss, api.ConditionFalse, "Error", "Failed initialize provisioner")
