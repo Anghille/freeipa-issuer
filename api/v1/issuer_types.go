@@ -30,7 +30,7 @@ type IssuerSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Host remote FreeIPA server
-	Host     string             `json:"host"`
+	Hosts    []string           `json:"hosts"`
 	User     *SecretKeySelector `json:"user"`
 	Password *SecretKeySelector `json:"password"`
 
