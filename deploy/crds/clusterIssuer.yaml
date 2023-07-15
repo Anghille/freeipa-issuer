@@ -97,7 +97,7 @@ spec:
             - addPrincipal
             - addService
             - ca
-            - host
+            - hosts
             - insecure
             - password
             - serviceName
