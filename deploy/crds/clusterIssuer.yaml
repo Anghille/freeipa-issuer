@@ -44,10 +44,12 @@ spec:
               ca:
                 default: ipa
                 type: string
-              host:
-                description: Host remote FreeIPA server
-                minLength: 1
-                type: string
+              hosts:
+                description: List of remote FreeIPA servers
+                type: array
+                items:
+                  type: string
+                  minLength: 1
               insecure:
                 default: false
                 type: boolean
